@@ -4,7 +4,7 @@ if [[ ! -z """${1}""" ]]
 then
     export TARGET="${1}"
     export DEFAULT_INTERFACE=$(ip -o -4 route show to default | awk '/dev/ {print $5}')
-    export DEFAULT_INTERFACE_ADDRESS=$(ifconfig ${DEFAULT_INTERFACE_ADDRESS}  | grep -o -h -U -P 'inet\s[^0-9]*([^\s]*)' | sed "s#inet\s[^0-9]*##gi")
+    export DEFAULT_INTERFACE_ADDRESS=$(ifconfig ${DEFAULT_INTERFACE_ADDRESS}  | grep -o -h -U -P 'inet\s[^0-9]*([^\s]*)' | sed "s#inet\s[^0-9]*##gi" | head -n 1)
 
     export MSFCONSOLE_START_SCRIPT=$(cat<<SCRIPT
 set -g VERBOSE true
@@ -17,6 +17,9 @@ set -g RHOST ${TARGET}
 set -g RHOSTS ${TARGET}
 
 set -g LHOST ${DEFAULT_INTERFACE_ADDRESS}
+
+set -g CreateSession true
+
 SCRIPT
 )
 
