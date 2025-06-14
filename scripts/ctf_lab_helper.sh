@@ -34,6 +34,14 @@ SCRIPT
     echo """${MSFCONSOLE_START_SCRIPT}""" > """${HOME}/msfconsole.startup.rc"""
     echo """${NMAP_BASE_SCAN}""" > """${HOME}/nmap_tcp_scan.sh"""
     chmod +x """${HOME}/nmap_tcp_scan.sh"""
+
+    echo "[*] starting services ..."
+    sudo systemctl start postgresql
+    sudo systemctl start apache2
+
+    echo "[*] initializing ..."
+    sudo msfdb init
+    sudo msfdb start &>/dev/null
 else
     echo "Usage: ${0} <TARGET>"
 fi

