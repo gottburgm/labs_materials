@@ -1,9 +1,23 @@
-sessions -i SESSION
-run post/linux/gather/enum_configs
-run post/linux/gather/enum_network
-run post/linux/gather/enum_packages
-run post/linux/gather/enum_protections
-run post/linux/gather/hashdump
-run post/linux/gather/checkvm
-run post/linux/gather/ssh_creds
-run post/linux/gather/enum_system
+use post/linux/gather/enum_configs
+run
+
+use post/linux/gather/enum_network
+run
+
+use post/linux/gather/enum_packages
+run
+
+use post/linux/gather/enum_protections
+run
+
+use post/linux/gather/hashdump
+run
+
+use post/linux/gather/checkvm
+run
+
+use post/linux/gather/ssh_creds
+run
+
+use post/linux/gather/enum_system
+run
