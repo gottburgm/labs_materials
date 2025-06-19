@@ -1,0 +1,144 @@
+use auxiliary/scanner/sap/sap_ctc_verb_tampering_user_mgmt
+run
+
+
+use auxiliary/scanner/sap/sap_hostctrl_getcomputersystem
+run
+
+
+use auxiliary/scanner/sap/sap_icf_public_info
+run
+
+
+use auxiliary/scanner/sap/sap_icm_urlscan
+run
+
+
+use auxiliary/scanner/sap/sap_mgmt_con_abaplog
+run
+
+
+use auxiliary/scanner/sap/sap_mgmt_con_brute_login
+run
+
+
+use auxiliary/scanner/sap/sap_mgmt_con_extractusers
+run
+
+
+use auxiliary/scanner/sap/sap_mgmt_con_getaccesspoints
+run
+
+
+use auxiliary/scanner/sap/sap_mgmt_con_getenv
+run
+
+
+use auxiliary/scanner/sap/sap_mgmt_con_getlogfiles
+run
+
+
+use auxiliary/scanner/sap/sap_mgmt_con_getprocesslist
+run
+
+
+use auxiliary/scanner/sap/sap_mgmt_con_getprocessparameter
+run
+
+
+use auxiliary/scanner/sap/sap_mgmt_con_instanceproperties
+run
+
+
+use auxiliary/scanner/sap/sap_mgmt_con_listconfigfiles
+run
+
+
+use auxiliary/scanner/sap/sap_mgmt_con_listlogfiles
+run
+
+
+use auxiliary/scanner/sap/sap_mgmt_con_startprofile
+run
+
+
+use auxiliary/scanner/sap/sap_mgmt_con_version
+run
+
+
+use auxiliary/scanner/sap/sap_router_info_request
+run
+
+
+use auxiliary/scanner/sap/sap_router_portscanner
+run
+
+
+use auxiliary/scanner/sap/sap_service_discovery
+run
+
+
+use auxiliary/scanner/sap/sap_smb_relay
+run
+
+
+use auxiliary/scanner/sap/sap_soap_bapi_user_create1
+run
+
+
+use auxiliary/scanner/sap/sap_soap_rfc_brute_login
+run
+
+
+use auxiliary/scanner/sap/sap_soap_rfc_dbmcli_sxpg_call_system_command_exec
+run
+
+
+use auxiliary/scanner/sap/sap_soap_rfc_dbmcli_sxpg_command_exec
+run
+
+
+use auxiliary/scanner/sap/sap_soap_rfc_eps_get_directory_listing
+run
+
+
+use auxiliary/scanner/sap/sap_soap_rfc_pfl_check_os_file_existence
+run
+
+
+use auxiliary/scanner/sap/sap_soap_rfc_ping
+run
+
+
+use auxiliary/scanner/sap/sap_soap_rfc_read_table
+run
+
+
+use auxiliary/scanner/sap/sap_soap_rfc_rzl_read_dir
+run
+
+
+use auxiliary/scanner/sap/sap_soap_rfc_susr_rfc_user_interface
+run
+
+
+use auxiliary/scanner/sap/sap_soap_rfc_sxpg_call_system_exec
+run
+
+
+use auxiliary/scanner/sap/sap_soap_rfc_sxpg_command_exec
+run
+
+
+use auxiliary/scanner/sap/sap_soap_rfc_system_info
+run
+
+
+use auxiliary/scanner/sap/sap_soap_th_saprel_disclosure
+run
+
+
+use auxiliary/scanner/sap/sap_web_gui_brute_login
+run
+
+

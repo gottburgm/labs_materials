@@ -1,0 +1,28 @@
+use auxiliary/scanner/ssh/libssh_auth_bypass
+run
+
+
+use auxiliary/scanner/ssh/ssh_enum_git_keys
+run
+
+
+use auxiliary/scanner/ssh/ssh_enumusers
+run
+
+
+use auxiliary/scanner/ssh/ssh_identify_pubkeys
+run
+
+
+use auxiliary/scanner/ssh/ssh_login
+run
+
+
+use auxiliary/scanner/ssh/ssh_login_pubkey
+run
+
+
+use auxiliary/scanner/ssh/ssh_version
+run
+
+

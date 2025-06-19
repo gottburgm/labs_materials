@@ -1,0 +1,20 @@
+use auxiliary/scanner/mssql/mssql_hashdump
+run
+
+
+use auxiliary/scanner/mssql/mssql_login
+run
+
+
+use auxiliary/scanner/mssql/mssql_ping
+run
+
+
+use auxiliary/scanner/mssql/mssql_schemadump
+run
+
+
+use auxiliary/scanner/mssql/mssql_version
+run
+
+

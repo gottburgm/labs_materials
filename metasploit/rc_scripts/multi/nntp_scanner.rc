@@ -1,0 +1,4 @@
+use auxiliary/scanner/nntp/nntp_login
+run
+
+

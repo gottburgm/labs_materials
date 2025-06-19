@@ -1,0 +1,32 @@
+use auxiliary/scanner/snmp/cnpilot_r_snmp_loot
+run
+
+
+use auxiliary/scanner/snmp/epmp1000_snmp_loot
+run
+
+
+use auxiliary/scanner/snmp/snmp_enum
+run
+
+
+use auxiliary/scanner/snmp/snmp_enum_hp_laserjet
+run
+
+
+use auxiliary/scanner/snmp/snmp_enumshares
+run
+
+
+use auxiliary/scanner/snmp/snmp_enumusers
+run
+
+
+use auxiliary/scanner/snmp/snmp_login
+run
+
+
+use auxiliary/scanner/snmp/snmp_set
+run
+
+

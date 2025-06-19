@@ -1,0 +1,4 @@
+use auxiliary/scanner/ldap/ldap_login
+run
+
+

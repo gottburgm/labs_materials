@@ -1,0 +1,62 @@
+use auxiliary/scanner/smb/smb_enum_gpp
+set RPORT 139
+run
+
+set RPORT 445
+run
+
+use auxiliary/scanner/smb/smb_enumshares
+set RPORT 139
+run
+
+set RPORT 445
+run
+
+use auxiliary/scanner/smb/smb_enumusers
+set RPORT 139
+run
+
+set RPORT 445
+run
+
+use auxiliary/scanner/smb/smb_enumusers_domain
+set RPORT 139
+run
+
+set RPORT 445
+run
+
+use auxiliary/scanner/smb/smb_login
+set RPORT 139
+run
+
+set RPORT 445
+run
+
+use auxiliary/scanner/smb/smb_lookupsid
+set RPORT 139
+run
+
+set RPORT 445
+run
+
+use auxiliary/scanner/smb/smb_ms17_010
+set RPORT 139
+run
+
+set RPORT 445
+run
+
+use auxiliary/scanner/smb/smb_uninit_cred
+set RPORT 139
+run
+
+set RPORT 445
+run
+
+use auxiliary/scanner/smb/smb_version
+set RPORT 139
+run
+
+set RPORT 445
+run
