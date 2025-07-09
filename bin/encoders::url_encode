@@ -1,0 +1,46 @@
+#!/bin/bash
+
+function encoders::_call_encoder() {
+    local module_name=""
+    local function_name=""
+
+    if [[ $# -ge 1 ]]
+    then
+        if [[ $# -ge 2 ]]
+        then
+            module_name="$1"
+            function_name="$2"
+            shift
+        else
+            module_name="CORE"
+            function_name="$1"
+        fi
+        shift
+    else
+        print_error "$0: encoders::_call_encoder(): requires at least on parameter ."
+        return
+    fi
+
+    if [[ $# -ge 1 ]]
+    then
+        perl -e 'use '$module_name'; my $r = '$module_name'::'$function_name'("'"""$*"""'");  print ((defined($r)) ? ((!ref($r)) ? $r : JSON::XS->new->pretty->encode($r)) : "");'
+    else
+        perl -e 'use JSON::XS; use '$module_name'; my $s = ""; while(<>) { $s .= $_; } my $r = '$module_name'::'$function_name'($s); print ((defined($r)) ? ((!ref($r)) ? $r : JSON::XS->new->pretty->encode($r)) : "");'
+    fi
+}
+
+function encoders::url_encode() {
+    local string
+    local results
+
+    if [ ! -z "$1" ]
+    then
+        results=$(perl -e 'use URI::Fast; print URI::Fast::encode("'"""$*"""'");')
+    else
+        results=$(perl -e 'use URI::Fast; my $string = <>; chomp($string); print URI::Fast::encode($string);')
+    fi
+
+    echo """${results}"""
+}
+
+encoders::url_encode $*

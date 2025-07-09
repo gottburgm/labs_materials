@@ -1,0 +1,14 @@
+#!/bin/bash
+
+function encoders::hex_encode() {
+    if [ ! -z """$1""" ]
+    then
+        results=$(perl -e 'use String::HexConvert; print String::HexConvert::ascii_to_hex("'$*'");')
+    else
+        results=$(perl -e 'use String::HexConvert; my $string = <>; chomp $string; print String::HexConvert::ascii_to_hex($string);')
+    fi
+
+    echo "$results"
+}
+
+encoders::hex_encode $*
