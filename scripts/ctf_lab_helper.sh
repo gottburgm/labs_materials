@@ -17,10 +17,12 @@ BINARIES_DIRECTORY="""${BASE_DIRECTORY}/bin"""
 if [[ ! -z """${1}""" ]]
 then
     export TARGET="${1}"
+    export LAB_USERNAME=""
+    export LAB_PASSWORD=""
     export DEFAULT_INTERFACE=$(ip -o -4 route show to default | awk '/dev/ {print $5}')
     export DEFAULT_INTERFACE_ADDRESS=$(ifconfig ${DEFAULT_INTERFACE_ADDRESS}  | grep -o -h -U -P 'inet\s[^0-9]*([^\s]*)' | sed "s#inet\s[^0-9]*##gi" | head -n 1)
 
-    export MSFCONSOLE_START_SCRIPT=$(cat<<SCRIPT
+        export MSFCONSOLE_START_SCRIPT=$(cat<<SCRIPT
 set -g VERBOSE true
 set -g HttpTrace true
 set -g ANONYMOUS_LOGIN true
@@ -37,8 +39,27 @@ set -g CreateSession true
 SCRIPT
 )
 
+    if [[ ! -z """${2}""" ]]
+    then
+        LAB_USERNAME="""${2}"""
+        MSFCONSOLE_START_SCRIPT=$(cat<<SCRIPT
+${MSFCONSOLE_START_SCRIPT}
+set -g USERNAME ${LAB_USERNAME}
+SCRIPT
+)
+        if [[ ! -z """${3}""" ]]
+        then
+            LAB_PASSWORD="""${3}"""
+            MSFCONSOLE_START_SCRIPT=$(cat<<SCRIPT
+${MSFCONSOLE_START_SCRIPT}
+set -g PASSWORD ${LAB_PASSWORD}
+SCRIPT
+)
+        fi
+    fi
 
-     export NMAP_BASE_SCAN=$(cat<<SCRIPT
+    export MSFCONSOLE_START_SCRIPT
+    export NMAP_BASE_SCAN=$(cat<<SCRIPT
 #!/bin/bash
 
 sudo nmap -v -sT -sV -O -A --open --reason -Pn -p- -T4 -vvv ${TARGET} --script "smb2-capabilities.nse,smb2-security-mode.nse,smb2-time.nse,smb2-vuln-uptime.nse,smb-double-pulsar-backdoor.nse,smb-enum-domains.nse,smb-enum-groups.nse,smb-enum-processes.nse,smb-enum-services.nse,smb-enum-sessions.nse,smb-enum-shares.nse,smb-enum-users.nse,smb-ls.nse,smb-mbenum.nse,smb-os-discovery.nse,smb-print-text.nse,smb-protocols.nse,smb-psexec.nse,smb-security-mode.nse,smb-server-stats.nse,smb-system-info.nse,smb-vuln-conficker.nse,smb-vuln-cve2009-3103.nse,smb-vuln-cve-2017-7494.nse,smb-vuln-ms06-025.nse,smb-vuln-ms07-029.nse,smb-vuln-ms08-067.nse,smb-vuln-ms10-054.nse,smb-vuln-ms10-061.nse,smb-vuln-ms17-010.nse,smb-vuln-webexec.nse,smb-webexec-exploit.nse" -oA ${TARGET}_tcp_scan
