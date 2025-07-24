@@ -1,0 +1,58 @@
+# https_services_scan.rc
+# Global settings
+setg THREADS 50
+setg VERBOSE true
+
+ruby << 'END'
+# List of scanner modules targeting HTTP + HTTPS
+http_modules = %w[http_header http_cors robots_txt options trace title dir_scanner sitemap http_put http_methods http_version]
+https_modules = %w[ssl_version ssl_certificate ssl_dhparams ssl_tls ssl_cipher]
+
+# Collect services from the database
+svcs = framework.db.services.where(port: 443)
+svcs += framework.db.services.where(port: 8443)
+svcs += framework.db.services.where(["name LIKE ?", "%https%"])
+svcs.uniq!
+
+# Group services by port and launch each module as a background job
+svcs.group_by(&:port).each do |port, services|
+    hosts = services.map { |s| s.host.address }.uniq.join(',')
+
+    http_modules.each do |mod|
+        path = "scanner/http/#{mod}"
+        next unless framework.modules.module_names('auxiliary').include?(path)
+
+        sc = framework.modules.create('auxiliary', path)
+        sc.datastore['RHOSTS']    = hosts
+        sc.datastore['RPORT']     = port
+        sc.datastore['SSL']       = true
+        sc.datastore['THREADS']   = 50
+        sc.datastore['VERBOSE']   = true
+        sc.datastore['HTTPTRACE'] = true
+        
+        framework.threads.spawn('Msf::Module::Auxiliary', false, sc, false) do
+            sc.run_simple('LocalInput' => '', 'LocalOutput' => '')
+        end
+    end
+
+    https_modules.each do |mod|
+        path = "scanner/ssl/#{mod}"
+        next unless framework.modules.module_names('auxiliary').include?(path)
+
+        sc = framework.modules.create('auxiliary', path)
+        sc.datastore['RHOSTS']    = hosts
+        sc.datastore['RPORT']     = port
+        sc.datastore['SSL']       = true
+        sc.datastore['THREADS']   = 50
+        sc.datastore['VERBOSE']   = true
+        sc.datastore['HTTPTRACE'] = true
+        
+        framework.threads.spawn('Msf::Module::Auxiliary', false, sc, false) do
+            sc.run_simple('LocalInput' => '', 'LocalOutput' => '')
+        end
+    end
+end
+END
+
+# Exit once all jobs are spawned
+exit

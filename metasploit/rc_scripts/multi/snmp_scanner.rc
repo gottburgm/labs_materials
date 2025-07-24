@@ -1,32 +1,35 @@
-use auxiliary/scanner/snmp/cnpilot_r_snmp_loot
-run
+# snmp_services_scan.rc
+# Global settings
+setg THREADS 50
+setg VERBOSE true
 
+ruby << 'END'
+# List of scanner modules targeting SNMP
+mods = %w[snmp_login snmp_enum  snmp_enum_hp_laserjet snmp_enumshares snmp_enumusers snmp_set snmp_version]
 
-use auxiliary/scanner/snmp/epmp1000_snmp_loot
-run
+# Collect services from the database
+svcs = framework.db.services.where(port: 161)
+svcs += framework.db.services.where(["name LIKE ?", "%snmp%"])
+svcs.uniq!
 
+# Group services by port and launch each module as a background job
+svcs.group_by(&:port).each do |port, services|
+  hosts = services.map { |s| s.host.address }.uniq.join(',')
+  mods.each do |mod|
+    path = "scanner/snmp/#{mod}"
+    next unless framework.modules.module_names('auxiliary').include?(path)
 
-use auxiliary/scanner/snmp/snmp_enum
-run
+    sc = framework.modules.create('auxiliary', path)
+    sc.datastore['RHOSTS']   = hosts
+    sc.datastore['RPORT']    = port
+    sc.datastore['THREADS']  = 50
+    sc.datastore['VERBOSE']  = true
+    framework.threads.spawn('Msf::Module::Auxiliary', false, sc, false) do
+      sc.run_simple('LocalInput' => '', 'LocalOutput' => '')
+    end
+  end
+end
+END
 
-
-use auxiliary/scanner/snmp/snmp_enum_hp_laserjet
-run
-
-
-use auxiliary/scanner/snmp/snmp_enumshares
-run
-
-
-use auxiliary/scanner/snmp/snmp_enumusers
-run
-
-
-use auxiliary/scanner/snmp/snmp_login
-run
-
-
-use auxiliary/scanner/snmp/snmp_set
-run
-
-
+# Exit once all jobs are spawned
+exit

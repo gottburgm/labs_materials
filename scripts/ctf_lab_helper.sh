@@ -66,6 +66,9 @@ sudo nmap -v -sT -sV -O -A --open --reason -Pn -p- -T4 -vvv ${TARGET} --script "
 SCRIPT
 )
 
+    echo """[*] [GENERATORS] creating NMap scan script: ${HOME}/nmap_tcp_scan.sh ...."""
+    echo """${NMAP_BASE_SCAN}""" > """${HOME}/nmap_tcp_scan.sh"""
+    chmod +x """${HOME}/nmap_tcp_scan.sh"""
 
     echo """[*] setting up system base ..."""
 
@@ -100,9 +103,6 @@ SCRIPT
         echo "[*] [SETUP] initializing MSF ..."
         sudo msfdb init
         sudo msfdb start &>/dev/null
-
-        echo "[*] [SETUP] installing perl dependencies ..."
-        cpan -f -i URI::Fast
     fi
 
     if [[ ! -d """${BUILDERS_SCRIPT_DIRECTORY}""" ]]
@@ -111,11 +111,6 @@ SCRIPT
     else
         echo """[*] [GENERATORS] creating msf starting script: ${HOME}/msfconsole.startup.rc ...."""
         echo """${MSFCONSOLE_START_SCRIPT}""" > """${HOME}/msfconsole.startup.rc"""
-
-        echo """[*] [GENERATORS] creating NMap scan script: ${HOME}/nmap_tcp_scan.sh ...."""
-        echo """${NMAP_BASE_SCAN}""" > """${HOME}/nmap_tcp_scan.sh"""
-        chmod +x """${HOME}/nmap_tcp_scan.sh"""
-
 
         echo "[*] [GENERATORS] running payloads/webshelles generators scripts ..."
         for file in $(find """${BUILDERS_SCRIPT_DIRECTORY}""" -type f)

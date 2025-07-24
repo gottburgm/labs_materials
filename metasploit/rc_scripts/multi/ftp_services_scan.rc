@@ -1,16 +1,22 @@
-smb_modules = %w[smb_version smb_enum_gpp smb_enumshares smb_enumusers smb_enumusers_domain smb_login smb_lookupsid smb_ms17_010 smb_uninit_cred]
+# ftp_services_scan.rc
+# Global settings
+setg THREADS 50
+setg VERBOSE true
+
+ruby << 'END'
+# List of scanner modules targeting FTP
+mods = %w[ftp_version ftp_syst ftp_login ftp_anonymous]
 
 # Collect services from the database
-svcs = framework.db.services.where(port: 139)
-svcs += framework.db.services.where(port: 445)
-svcs += framework.db.services.where(["name LIKE ?", "%smb%"])
+svcs = framework.db.services.where(port: 21)
+svcs += framework.db.services.where(["name LIKE ?", "%ftp%"])
 svcs.uniq!
 
 # Group services by port and launch each module as a background job
 svcs.group_by(&:port).each do |port, services|
   hosts = services.map { |s| s.host.address }.uniq.join(',')
-  smb_modules.each do |mod|
-    path = "scanner/smb/#{mod}"
+  mods.each do |mod|
+    path = "scanner/ftp/#{mod}"
     next unless framework.modules.module_names('auxiliary').include?(path)
 
     sc = framework.modules.create('auxiliary', path)
@@ -18,7 +24,6 @@ svcs.group_by(&:port).each do |port, services|
     sc.datastore['RPORT']    = port
     sc.datastore['THREADS']  = 50
     sc.datastore['VERBOSE']  = true
-    sc.datastore['HTTPTRACE'] = true
     framework.threads.spawn('Msf::Module::Auxiliary', false, sc, false) do
       sc.run_simple('LocalInput' => '', 'LocalOutput' => '')
     end

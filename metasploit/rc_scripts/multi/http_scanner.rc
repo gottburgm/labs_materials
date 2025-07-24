@@ -1,16 +1,23 @@
-smb_modules = %w[smb_version smb_enum_gpp smb_enumshares smb_enumusers smb_enumusers_domain smb_login smb_lookupsid smb_ms17_010 smb_uninit_cred]
+# http_services_scan.rc
+# Global settings
+setg THREADS 50
+setg VERBOSE true
+
+ruby << 'END'
+# List of scanner modules targeting HTTP
+modules = %w[http_header http_cors robots_txt options trace title dir_scanner sitemap http_put http_methods http_version]
 
 # Collect services from the database
-svcs = framework.db.services.where(port: 139)
-svcs += framework.db.services.where(port: 445)
-svcs += framework.db.services.where(["name LIKE ?", "%smb%"])
+svcs = framework.db.services.where(port: 80)
+svcs += framework.db.services.where(port: 8080)
+svcs += framework.db.services.where(["name LIKE ?", "%http%"]).reject { |s| s.name =~ /https/ }
 svcs.uniq!
 
 # Group services by port and launch each module as a background job
 svcs.group_by(&:port).each do |port, services|
   hosts = services.map { |s| s.host.address }.uniq.join(',')
-  smb_modules.each do |mod|
-    path = "scanner/smb/#{mod}"
+  modules.each do |mod|
+    path = "scanner/http/#{mod}"
     next unless framework.modules.module_names('auxiliary').include?(path)
 
     sc = framework.modules.create('auxiliary', path)

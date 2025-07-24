@@ -1,0 +1,180 @@
+# all_services_scan.rc
+# --------------------
+# Global settings
+setg THREADS 50
+setg VERBOSE true
+setg HTTPTRACE true
+
+ruby << 'END'
+# Definition of protocols to scan
+scanners = {
+  'http' => {
+    prefix: 'http',
+    ports: [80, 8080],
+    name_filter: 'http',
+    name_exclusion: /https/,
+    modules: %w[http_header http_cors robots_txt options trace title dir_scanner sitemap http_put http_methods http_version http_vhost]
+  },
+  'https' => {
+    prefix: 'ssl',
+    ports: [443, 8443],
+    name_filter: 'https',
+    modules: %w[ssl_version ssl_certificate ssl_dhparams ssl_tls ssl_cipher ssl_heartbleed]
+  },
+  'ftp' => {
+    prefix: 'ftp',
+    ports: [21],
+    name_filter: 'ftp',
+    modules: %w[ftp_version ftp_syst ftp_login ftp_anonymous ftp_banner]
+  },
+  'imap' => {
+    prefix: 'imap',
+    ports: [143],
+    name_filter: 'imap',
+    modules: %w[imap_version imap_login imap_banner]
+  },
+  'ldap' => {
+    prefix: 'ldap',
+    ports: [389],
+    name_filter: 'ldap',
+    modules: %w[ldap_version ldap_search ldap_login]
+  },
+  'mssql' => {
+    prefix: 'mssql',
+    ports: [1433],
+    name_filter: 'mssql',
+    modules: %w[mssql_ping mssql_login mssql_sql]
+  },
+  'mysql' => {
+    prefix: 'mysql',
+    ports: [3306],
+    name_filter: 'mysql',
+    modules: %w[mysql_version mysql_login mysql_empty_password]
+  },
+  'nntp' => {
+    prefix: 'nntp',
+    ports: [119],
+    name_filter: 'nntp',
+    modules: %w[nntp_version nntp_get]
+  },
+  'pop3' => {
+    prefix: 'pop3',
+    ports: [110],
+    name_filter: 'pop3',
+    modules: %w[pop3_version pop3_login pop3_banner]
+  },
+  'rdp' => {
+    prefix: 'rdp',
+    ports: [3389],
+    name_filter: 'rdp',
+    modules: %w[rdp_version rdp_scanner]
+  },
+  'snmp' => {
+    prefix: 'snmp',
+    ports: [161],
+    name_filter: 'snmp',
+    modules: %w[snmp_login snmp_enum snmp_version snmp_share_download]
+  },
+  'ssh' => {
+    prefix: 'ssh',
+    ports: [22],
+    name_filter: 'ssh',
+    modules: %w[ssh_version ssh_login ssh_banner]
+  },
+  'sap' => {
+    prefix: 'sap',
+    ports: [3200],
+    name_filter: 'sap',
+    modules: %w[sap_rfc_ping sap_get_config sap_login]
+  },
+  'smb' => {
+    prefix: 'smb',
+    ports: [445, 139],
+    name_filter: 'smb',
+    modules: %w[smb_version smb_login smb_enumshares smb_enumusers smb_lookupsid]
+  },
+  'smtp' => {
+    prefix: 'smtp',
+    ports: [25, 587],
+    name_filter: 'smtp',
+    modules: %w[smtp_version smtp_enum_users smtp_open_relay smtp_vrfy]
+  },
+  'telnet' => {
+    prefix: 'telnet',
+    ports: [23],
+    name_filter: 'telnet',
+    modules: %w[telnet_version telnet_login]
+  },
+  'tftp' => {
+    prefix: 'tftp',
+    ports: [69],
+    name_filter: 'tftp',
+    modules: %w[tftp_version tftp_download]
+  },
+  'vnc' => {
+    prefix: 'vnc',
+    ports: [5900],
+    name_filter: 'vnc',
+    modules: %w[vnc_version vnc_login]
+  },
+  'winrm' => {
+    prefix: 'winrm',
+    ports: [5985, 5986],
+    name_filter: 'winrm',
+    modules: %w[windows_winrm_login windows_winrm_script]
+  },
+  'dns' => {
+    prefix: 'dns',
+    ports: [53],
+    name_filter: 'dns',
+    modules: %w[dns_brute dns_srv dns_zone_transfer dns_reverse_lookup]
+  },
+  'ntp' => {
+    prefix: 'ntp',
+    ports: [123],
+    name_filter: 'ntp',
+    modules: %w[ntp_version ntp_monlist]
+  },
+  'kerberos' => {
+    prefix: 'kerberos',
+    ports: [88],
+    name_filter: 'kerberos',
+    modules: %w[kerberos_enumerate]
+  }
+}
+
+# Iterate through each protocol
+scanners.each do |proto, cfg|
+  # Build service list
+  svcs = []
+  cfg[:ports].each do |port|
+    svcs += framework.db.services.where(port: port)
+  end
+  svcs += framework.db.services.where(["name LIKE ?", "%#{cfg[:name_filter]}%"])
+  svcs.reject! { |s| s.name =~ cfg[:name_exclusion] } if cfg[:name_exclusion]
+  svcs.uniq!
+
+  # Group by port and run all modules
+  svcs.group_by(&:port).each do |port, services|
+    hosts = services.map { |s| s.host.address }.uniq.join(',')
+    cfg[:modules].each do |mod|
+      path = "scanner/#{cfg[:prefix]}/#{mod}"
+      next unless framework.modules.module_names('auxiliary').include?(path)
+
+      sc = framework.modules.create('auxiliary', path)
+      sc.datastore['RHOSTS']   = hosts
+      sc.datastore['RPORT']    = port
+      sc.datastore['THREADS']  = 50
+      sc.datastore['VERBOSE']  = true
+      sc.datastore['SSL']      = true if proto == 'https'
+      sc.datastore['HTTPTRACE']= true if proto == 'http'
+      framework.threads.spawn('Msf::Module::Auxiliary', false, sc, false) do
+        sc.run_simple('LocalInput' => '', 'LocalOutput' => '')
+      end
+    end
+  end
+end
+END
+
+# Exit after queuing all jobs
+exit

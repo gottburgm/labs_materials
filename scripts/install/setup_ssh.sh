@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # Variables
 KEY_TYPE="ed25519"            # ou rsa, ecdsa, …

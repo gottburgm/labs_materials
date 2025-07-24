@@ -1,0 +1,213 @@
+# workspace_report_generator.rc
+# ------------------------------------------------------------------
+# Generates a dark‑themed, responsive Materialize HTML report for the
+# current Metasploit workspace, with per‑section JSON export buttons.
+# Output: workspace_report.html
+#
+# Usage:
+#   msfconsole -r workspace_report_generator.rc
+# ------------------------------------------------------------------
+
+setg VERBOSE true
+
+ruby << 'RUBY'
+require 'json'
+include Msf
+
+ws = framework.db.workspace
+
+# ---------------- Gather Data ----------------
+hosts = ws.hosts.map { |h| {address:h.address,name:h.name||'',os:h.os_name||'',mac:h.mac||'',discovered:h.created_at} }
+services = ws.services.map { |s| {host:s.host.address,port:s.port,proto:s.proto,name:s.name||'',state:s.state} }
+web_services = ws.services.select { |s| s.name =~ /http/i || [80,443,8080,8443].include?(s.port) }.map { |s| {host:s.host.address,port:s.port,name:s.name||'',ssl:(s.name=~/https/i||[443,8443].include?(s.port))} }
+notes = ws.notes.map { |n| {host:n.host&.address||'',type:n.ntype,data:n.data.to_s.gsub(/[\\r\\n]+/,' '),updated:n.updated_at} }
+vulns = ws.vulns.map { |v| {host:v.host.address,name:v.name,info:v.info||'',refs:v.refs.map(&:name).join(', '),exploited:!!v.exploited_at} }
+creds = ws.creds.map { |c| {host:c.service&.host&.address||'',port:c.service&.port||'',user:c.user,pass:c.pass,proto:c.service&.proto||''} }
+
+counts = {hosts:hosts.size,services:services.size,web_services:web_services.size,notes:notes.size,vulns:vulns.size,creds:creds.size}
+
+data = {
+  generated_at: Time.now,
+  workspace: ws.name,
+  counts: counts,
+  hosts: hosts,
+  services: services,
+  web_services: web_services,
+  notes: notes,
+  vulns: vulns,
+  creds: creds
+}
+
+json_blob = JSON.pretty_generate(data)
+
+# ---------------- HTML Template --------------
+html = <<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Workspace Report – #{ws.name}</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+<style>
+  body{background:#121212;color:#e0e0e0}
+  nav,.sidenav{background:linear-gradient(45deg,#1f1f1f,#262626)}
+  .card{background:#1e1e1e;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,.7)}
+  .tabs .tab a{color:#80cbc4}.tabs .indicator{background:#80cbc4}
+  table.striped tbody tr:nth-child(odd){background:#1a1a1a}
+  .btn-gradient{background:linear-gradient(45deg,#42a5f5,#1e88e5)!important}
+  .chart-container{width:100%;min-height:260px}
+</style>
+</head>
+<body>
+<nav class="z-depth-3">
+ <div class="nav-wrapper container">
+  <a href="#dashboard" class="brand-logo">Report</a>
+  <a href="#" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+  <ul id="nav-mobile" class="right hide-on-med-and-down">
+    <li><a href="#dashboard">Dashboard</a></li><li><a href="#hosts">Hosts</a></li>
+    <li><a href="#services">Services</a></li><li><a href="#web_services">Web&nbsp;Services</a></li>
+    <li><a href="#notes">Notes</a></li><li><a href="#vulns">Vulnerabilities</a></li>
+    <li><a href="#creds">Credentials</a></li><li><a href="#stats">Stats</a></li>
+  </ul>
+ </div>
+</nav>
+
+<ul id="slide-out" class="sidenav">
+  <li><a href="#dashboard">Dashboard</a></li><li><a href="#hosts">Hosts</a></li>
+  <li><a href="#services">Services</a></li><li><a href="#web_services">Web Services</a></li>
+  <li><a href="#notes">Notes</a></li><li><a href="#vulns">Vulnerabilities</a></li>
+  <li><a href="#creds">Credentials</a></li><li><a href="#stats">Stats</a></li>
+</ul>
+
+<div class="container" style="padding-top:30px">
+  <ul class="tabs tabs-fixed-width blue-grey darken-4">
+    <li class="tab"><a class="active" href="#dashboard">Dashboard</a></li>
+    <li class="tab"><a href="#hosts">Hosts</a></li><li class="tab"><a href="#services">Services</a></li>
+    <li class="tab"><a href="#web_services">Web Services</a></li><li class="tab"><a href="#notes">Notes</a></li>
+    <li class="tab"><a href="#vulns">Vulnerabilities</a></li><li class="tab"><a href="#creds">Credentials</a></li>
+    <li class="tab"><a href="#stats">Stats</a></li>
+  </ul>
+
+  <!-- Dashboard -->
+  <div id="dashboard"><div class="row" id="dash_cards"></div></div>
+
+  <!-- Section template -->
+  <template id="section_tpl">
+    <h5 class="section-title"></h5>
+    <a class="btn btn-gradient right export-btn"><i class="material-icons left">file_download</i>Export JSON</a>
+    <table class="highlight responsive-table striped">
+      <thead class="thead"></thead>
+      <tbody class="tbody"></tbody>
+    </table>
+  </template>
+
+  <div id="hosts"></div>
+  <div id="services"></div>
+  <div id="web_services"></div>
+  <div id="notes"></div>
+  <div id="vulns"></div>
+  <div id="creds"></div>
+
+  <!-- Stats -->
+  <div id="stats">
+    <h5>Statistics</h5>
+    <div class="row">
+      <div class="col s12 m6 l4"><div class="card"><div class="card-content"><canvas id="chart_counts" class="chart-container"></canvas></div></div></div>
+      <div class="col s12 m6 l4"><div class="card"><div class="card-content"><canvas id="chart_proto" class="chart-container"></canvas></div></div></div>
+      <div class="col s12 m6 l4"><div class="card"><div class="card-content"><canvas id="chart_ports" class="chart-container"></canvas></div></div></div>
+      <div class="col s12 m6 l4"><div class="card"><div class="card-content"><canvas id="chart_vuln_hosts" class="chart-container"></canvas></div></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  M.Sidenav.init(document.querySelectorAll('.sidenav'));
+  M.Tabs.init(document.querySelectorAll('.tabs'));
+  const data = #{json_blob};
+
+  // Dashboard cards
+  const dash=document.getElementById('dash_cards');
+  Object.entries(data.counts).forEach(([k,v])=>{
+    dash.insertAdjacentHTML('beforeend',`
+     <div class='col s12 m4'>
+       <div class='card hoverable'>
+         <div class='card-content center'>
+           <span class='card-title'>${k.replace('_',' ')}</span>
+           <h3 class='teal-text text-lighten-2'>${v}</h3>
+         </div>
+       </div>
+     </div>`);
+  });
+
+  // Helper create section
+  const makeSection=(id,title,arr,cols)=>{
+    const container=document.getElementById(id);
+    const tpl=document.getElementById('section_tpl').content.cloneNode(true);
+    tpl.querySelector('.section-title').textContent=title;
+    const thead=tpl.querySelector('.thead'); const tbody=tpl.querySelector('.tbody');
+    thead.innerHTML='<tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr>';
+    arr.forEach(o=>{
+      tbody.insertAdjacentHTML('beforeend','<tr>'+cols.map(c=>`<td>${o[c]}</td>`).join('')+'</tr>');
+    });
+    const btn=tpl.querySelector('.export-btn');
+    btn.addEventListener('click',()=>downloadJSON(id));
+    container.appendChild(tpl);
+  };
+
+  makeSection('hosts','Hosts',data.hosts,['address','name','os','mac','discovered']);
+  makeSection('services','Services',data.services,['host','port','proto','name','state']);
+  makeSection('web_services','Web Services',data.web_services,['host','port','name','ssl']);
+  makeSection('notes','Notes',data.notes,['host','type','data','updated']);
+  makeSection('vulns','Vulnerabilities',data.vulns,['host','name','info','refs','exploited']);
+  makeSection('creds','Credentials',data.creds,['host','port','user','pass','proto']);
+
+  // JSON export
+  window.downloadJSON=function(type){
+    const blob=new Blob([JSON.stringify(data[type],null,2)],{type:'application/json'});
+    const link=document.createElement('a');
+    link.href=URL.createObjectURL(blob);
+    link.download=data.workspace+'_'+type+'.json';
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+  // Charts
+  new Chart(document.getElementById('chart_counts'),{
+    type:'doughnut',
+    data:{labels:Object.keys(data.counts),datasets:[{data:Object.values(data.counts),backgroundColor:['rgba(255,99,132,.6)','rgba(54,162,235,.6)','rgba(255,206,86,.6)','rgba(75,192,192,.6)','rgba(153,102,255,.6)','rgba(255,159,64,.6)']}]}
+  });
+
+  const protoCnt={}; data.services.forEach(s=>protoCnt[s.proto]=(protoCnt[s.proto]||0)+1);
+  new Chart(document.getElementById('chart_proto'),{
+    type:'bar',
+    data:{labels:Object.keys(protoCnt),datasets:[{label:'Services per Proto',data:Object.values(protoCnt),backgroundColor:'rgba(54,162,235,.5)'}]},
+    options:{indexAxis:'y'}
+  });
+
+  const portCnt={}; data.services.forEach(s=>portCnt[s.port]=(portCnt[s.port]||0)+1);
+  const topPorts=Object.entries(portCnt).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  new Chart(document.getElementById('chart_ports'),{
+    type:'bar',
+    data:{labels:topPorts.map(p=>p[0]),datasets:[{label:'Top Ports',data:topPorts.map(p=>p[1]),backgroundColor:'rgba(255,206,86,.5)'}]}
+  });
+
+  const vulnHost={}; data.vulns.forEach(v=>vulnHost[v.host]=(vulnHost[v.host]||0)+1);
+  const topVh=Object.entries(vulnHost).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  new Chart(document.getElementById('chart_vuln_hosts'),{
+    type:'bar',
+    data:{labels:topVh.map(v=>v[0]),datasets:[{label:'Vulns per Host',data:topVh.map(v=>v[1]),backgroundColor:'rgba(255,99,132,.5)'}]},
+    options:{indexAxis:'y'}
+  });
+});
+</script>
+</body>
+</html>
+HTML
+
+File.write('workspace_report.html', html)
+print_status "Report generated: #{File.expand_path('workspace_report.html')}"
+RUBY
